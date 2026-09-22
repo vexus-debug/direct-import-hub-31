@@ -9,6 +9,8 @@ import { EmptyState } from "@/components/dashboard/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { useClinicTerms } from "@/hooks/useClinicTerms";
+import { printPrescription } from "@/lib/printPrescription";
+import { useOrg } from "@/hooks/useOrg";
 
 const stagger = {
   container: { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } },
@@ -17,6 +19,7 @@ const stagger = {
 
 export default function PrescriptionsPage() {
   const terms = useClinicTerms();
+  const { currentOrg } = useOrg();
   const [rxOpen, setRxOpen] = useState(false);
   const { data: prescriptions = [], isLoading } = usePrescriptions();
 
@@ -86,7 +89,14 @@ export default function PrescriptionsPage() {
                         {rx.staff?.full_name || "Unknown"} · {rx.prescription_date}
                       </CardDescription>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" data-tour="prescriptions-print">
+                    <Button variant="ghost" size="icon" aria-label="Print prescription" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity focus-visible:opacity-100" data-tour="prescriptions-print" onClick={() => printPrescription({
+                      patientName: rx.patients ? `${rx.patients.first_name} ${rx.patients.last_name}` : "Unknown",
+                      clinicianName: rx.staff?.full_name || "Unknown",
+                      date: rx.prescription_date,
+                      diagnosis: rx.diagnosis,
+                      notes: rx.notes,
+                      medications: (rx.prescription_medications || []).map((m: any) => ({ name: m.medication_name || m.name, dosage: m.dosage, frequency: m.frequency, duration: m.duration })),
+                    }, currentOrg?.org_name)}>
                       <Printer className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -99,7 +109,7 @@ export default function PrescriptionsPage() {
                           {i + 1}
                         </span>
                         <div>
-                          <p className="text-sm font-medium">{med.name}</p>
+                          <p className="text-sm font-medium">{med.medication_name || med.name}</p>
                           <p className="text-xs text-muted-foreground font-mono">{med.dosage} · {med.duration}</p>
                         </div>
                       </div>
