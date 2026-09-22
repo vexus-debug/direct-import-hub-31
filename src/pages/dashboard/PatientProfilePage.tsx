@@ -353,6 +353,15 @@ export default function PatientProfilePage() {
               )}
             </CardContent>
           </Card>
+
+          {patientId && (
+            <OfflineDentalHistorySection
+              patientId={patientId}
+              canEdit={canEditClinical}
+              clinicianLabel={terms.clinician}
+              historyLabel={terms.historyTab}
+            />
+          )}
         </TabsContent>
 
         {/* Treatment Plans */}
