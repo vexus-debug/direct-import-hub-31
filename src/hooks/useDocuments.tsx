@@ -81,11 +81,15 @@ export function useUploadPatientDocument() {
     mutationFn: async ({ file, patientId, title, category, userId, notes }: {
       file: File; patientId: string; title: string; category: string; userId?: string; notes?: string;
     }) => {
-      const path = `patients/${currentOrg?.org_id}/${patientId}/${Date.now()}-${file.name}`;
-      const { error: uploadError } = await supabase.storage.from("clinic-documents").upload(path, file);
+      if (!currentOrg?.org_id) throw new Error("No clinic selected");
+      const path = `patients/${currentOrg.org_id}/${patientId}/${Date.now()}-${sanitizeFileName(file.name)}`;
+      const { error: uploadError } = await supabase.storage
+        .from("clinic-documents")
+        .upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
       if (uploadError) throw uploadError;
       const { data, error } = await (supabase as any).from("patient_documents").insert({
-        patient_id: patientId, title, category, file_url: path, uploaded_by: userId || null, org_id: currentOrg?.org_id,
+        patient_id: patientId, title: title.trim(), category, file_url: path,
+        file_type: file.type || null, uploaded_by: userId || null, org_id: currentOrg.org_id,
       }).select().single();
       if (error) throw error;
       return data;
