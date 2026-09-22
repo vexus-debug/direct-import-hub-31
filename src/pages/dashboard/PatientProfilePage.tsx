@@ -476,6 +476,32 @@ export default function PatientProfilePage() {
                     <CardTitle className="text-sm">{(rx.staff as any)?.full_name || "Unknown"}</CardTitle>
                     <CardDescription>{rx.prescription_date}</CardDescription>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    aria-label="Print prescription"
+                    onClick={() =>
+                      printPrescription(
+                        {
+                          patientName: `${patient.first_name} ${patient.last_name}`,
+                          clinicianName: (rx.staff as any)?.full_name || "Unknown",
+                          date: rx.prescription_date,
+                          diagnosis: rx.diagnosis,
+                          notes: rx.notes,
+                          medications: (rx.prescription_medications || []).map((m: any) => ({
+                            name: m.medication_name || m.name,
+                            dosage: m.dosage,
+                            frequency: m.frequency,
+                            duration: m.duration,
+                          })),
+                        },
+                        currentOrg?.org_name
+                      )
+                    }
+                  >
+                    <Printer className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
