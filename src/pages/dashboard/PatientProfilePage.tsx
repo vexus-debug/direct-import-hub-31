@@ -30,6 +30,8 @@ import { InvoiceDetailDialog } from "@/components/dashboard/InvoiceDetailDialog"
 import { CreatePrescriptionDialog } from "@/components/dashboard/CreatePrescriptionDialog";
 import { CreateLabCaseDialog } from "@/components/dashboard/CreateLabCaseDialog";
 import { toast } from "@/hooks/use-toast";
+import { OfflineDentalHistorySection } from "@/components/dashboard/OfflineDentalHistorySection";
+import { openPatientDocument } from "@/lib/documentUtils";
 
 const statusStyles: Record<string, string> = {
   paid: "bg-emerald-100 text-emerald-700",
