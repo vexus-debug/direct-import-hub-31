@@ -634,7 +634,12 @@ export default function PatientProfilePage() {
                     <Badge variant="outline" className="text-[10px] capitalize mt-1">{doc.category}</Badge>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">{new Date(doc.created_at).toLocaleDateString()}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-muted-foreground">{new Date(doc.created_at).toLocaleDateString()}</p>
+                  <Button size="sm" variant="ghost" onClick={() => openPatientDocument(doc.file_url)}>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
