@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Phone, Mail, AlertTriangle, User, FileText, Pencil, Camera, Plus, Upload, MessageCircle, ExternalLink, Receipt, Pill, FlaskConical, Zap } from "lucide-react";
+import { ArrowLeft, Phone, Mail, AlertTriangle, User, FileText, Pencil, Camera, Plus, Upload, MessageCircle, ExternalLink, Receipt, Pill, FlaskConical, Zap, Printer } from "lucide-react";
 import {
   usePatientDetail, usePatientVisits, usePatientTreatmentPlans, usePatientInvoices, usePatientPrescriptions,
 } from "@/hooks/usePatientProfile";
@@ -30,6 +30,9 @@ import { InvoiceDetailDialog } from "@/components/dashboard/InvoiceDetailDialog"
 import { CreatePrescriptionDialog } from "@/components/dashboard/CreatePrescriptionDialog";
 import { CreateLabCaseDialog } from "@/components/dashboard/CreateLabCaseDialog";
 import { toast } from "@/hooks/use-toast";
+import { OfflineDentalHistorySection } from "@/components/dashboard/OfflineDentalHistorySection";
+import { openPatientDocument } from "@/lib/documentUtils";
+import { printPrescription } from "@/lib/printPrescription";
 
 const statusStyles: Record<string, string> = {
   paid: "bg-emerald-100 text-emerald-700",
@@ -351,6 +354,15 @@ export default function PatientProfilePage() {
               )}
             </CardContent>
           </Card>
+
+          {patientId && (
+            <OfflineDentalHistorySection
+              patientId={patientId}
+              canEdit={canEditClinical}
+              clinicianLabel={terms.clinician}
+              historyLabel={terms.historyTab}
+            />
+          )}
         </TabsContent>
 
         {/* Treatment Plans */}
@@ -465,6 +477,32 @@ export default function PatientProfilePage() {
                     <CardTitle className="text-sm">{(rx.staff as any)?.full_name || "Unknown"}</CardTitle>
                     <CardDescription>{rx.prescription_date}</CardDescription>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    aria-label="Print prescription"
+                    onClick={() =>
+                      printPrescription(
+                        {
+                          patientName: `${patient.first_name} ${patient.last_name}`,
+                          clinicianName: (rx.staff as any)?.full_name || "Unknown",
+                          date: rx.prescription_date,
+                          diagnosis: rx.diagnosis,
+                          notes: rx.notes,
+                          medications: (rx.prescription_medications || []).map((m: any) => ({
+                            name: m.medication_name || m.name,
+                            dosage: m.dosage,
+                            frequency: m.frequency,
+                            duration: m.duration,
+                          })),
+                        },
+                        currentOrg?.org_name
+                      )
+                    }
+                  >
+                    <Printer className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -473,7 +511,7 @@ export default function PatientProfilePage() {
                     <div key={i} className="flex items-start gap-3 p-2 rounded-md bg-muted/30">
                       <span className="h-5 w-5 rounded-full bg-secondary/20 text-secondary text-[10px] flex items-center justify-center font-medium shrink-0">{i + 1}</span>
                       <div>
-                        <p className="text-sm font-medium">{med.name}</p>
+                        <p className="text-sm font-medium">{med.medication_name || med.name}</p>
                         <p className="text-xs text-muted-foreground">{med.dosage} · {med.frequency} · {med.duration}</p>
                       </div>
                     </div>
@@ -632,7 +670,12 @@ export default function PatientProfilePage() {
                     <Badge variant="outline" className="text-[10px] capitalize mt-1">{doc.category}</Badge>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">{new Date(doc.created_at).toLocaleDateString()}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-muted-foreground">{new Date(doc.created_at).toLocaleDateString()}</p>
+                  <Button size="sm" variant="ghost" onClick={() => openPatientDocument(doc.file_url)}>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
