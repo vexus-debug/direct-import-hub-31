@@ -29,11 +29,15 @@ export function useUploadClinicDocument() {
     mutationFn: async ({ file, title, category, expiryDate, userId, notes }: {
       file: File; title: string; category: string; expiryDate?: string; userId?: string; notes?: string;
     }) => {
-      const path = `clinic/${currentOrg?.org_id}/${Date.now()}-${file.name}`;
-      const { error: uploadError } = await supabase.storage.from("clinic-documents").upload(path, file);
+      if (!currentOrg?.org_id) throw new Error("No clinic selected");
+      const path = `clinic/${currentOrg.org_id}/${Date.now()}-${sanitizeFileName(file.name)}`;
+      const { error: uploadError } = await supabase.storage
+        .from("clinic-documents")
+        .upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
       if (uploadError) throw uploadError;
       const { data, error } = await (supabase as any).from("clinic_documents").insert({
-        title, category, file_url: path, expiry_date: expiryDate || null, uploaded_by: userId || null, org_id: currentOrg?.org_id,
+        title: title.trim(), category, file_url: path, file_type: file.type || null,
+        expiry_date: expiryDate || null, uploaded_by: userId || null, org_id: currentOrg.org_id,
       }).select().single();
       if (error) throw error;
       return data;
